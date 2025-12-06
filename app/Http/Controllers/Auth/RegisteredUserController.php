@@ -2,36 +2,38 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Models\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class RegisteredUserController extends Controller
 {
-    public function index() {
-        return view('tamus.register');
+    public function create() {
+        return view('auth.register');
     }
-    // Menampilkan form registrasi
-   public function store(Request $request)
-{
-    $request->validate([
-        'username' => 'required|unique:users',
-        'name' => 'required',
-        'email' => 'required|email|unique:users',
-        'password' => 'required|confirmed',
-    ]);
 
-    // Create the user
-    $user = User::create([
-        'username' => $request->username,
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => bcrypt($request->password),
-    ]);
+    public function store(Request $request) {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|confirmed|min:6',
+        ]);
 
-    // Redirect to a different page (e.g., homepage)
-    return redirect()->route('home')->with('success', 'Registration successful!');
-}
+        // Create user
+        $user = User::create([
+            'name' => $request->name,
+            'username' => Str::slug($request->name) . rand(100,999),
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        // Auto login
+        Auth::login($user);
+
+        // Redirect ke dashboard member
+        return redirect()->route('member.dashboard');
+    }
 }

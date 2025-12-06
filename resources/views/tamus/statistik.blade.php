@@ -5,6 +5,7 @@
     <title>Statistik Buku Tamu</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
             background-color: #f8f9fa;
@@ -96,7 +97,7 @@
         }
 
         /* ===== CHART AREA ===== */
-        .chart-keseluruhan canvas, #tamuPerAktivitasChart {
+        .chart-keseluruhan canvas, #tamuPerAktivitasChart, #tamuPerMemberChart {
             width: 100% !important;
             height: 420px !important;
             display: block;
@@ -188,14 +189,17 @@
                     Statistik Aktivitas
                 </button>
             </li>
-                  <div class="mb-3">
-                        <button class="btn btn-success" onclick="exportStats()">Export Statistik</button>
-                    </div>
-                    <button class="btn btn-success" onclick="exportToPDF()">Export PDF</button>
-
-           
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pernama-tab" data-bs-toggle="tab" data-bs-target="#pernama" type="button" role="tab">
+                    Statistik Per Nama
+                </button>
+            </li>
         </ul>
-  
+
+        <div class="mb-3">
+            <button class="btn btn-success" onclick="exportStats()">Export Statistik CSV</button>
+            <button class="btn btn-success" onclick="exportToPDF()">Export PDF</button>
+        </div>
 
         {{-- Isi Tab --}}
         <div class="tab-content" id="statistikTabsContent">
@@ -204,75 +208,32 @@
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">Jumlah Tamu per Hari</div>
                     <div class="card-body chart-keseluruhan" style="padding: 30px 20px;">
-                        <canvas id="tamuPerHariChart" style="width: 100%; height: 400px !important;"></canvas>
+                        <canvas id="tamuPerHariChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            {{-- Tab: Aktivitas (versi awal - tetap seperti semula) --}}
+            {{-- Tab: Aktivitas --}}
             <div class="tab-pane fade" id="aktivitas" role="tabpanel">
                 <div class="card mb-4">
                     <div class="card-header bg-success text-white">Jumlah Tamu per Aktivitas</div>
                     <div class="card-body">
-                        <canvas id="tamuPerAktivitasChart" style="max-height: 300px !important;"></canvas>
+                        <canvas id="tamuPerAktivitasChart"></canvas>
+                    </div>
+                </div>
+            </div>
 
+            {{-- Tab: Per Nama --}}
+            <div class="tab-pane fade" id="pernama" role="tabpanel">
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">Jumlah Tamu per Nama</div>
+                    <div class="card-body">
+                        <canvas id="tamuPerMemberChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    {{-- Script Chart --}}
-    <script>
-        const tamuPerHari = {!! json_encode($tamuPerHari) !!};
-        const tamuPerAktivitas = {!! json_encode($tamuPerAktivitas) !!};
-
-        // Grafik per hari (dibesarkan)
-        new Chart(document.getElementById('tamuPerHariChart'), {
-            type: 'bar',
-            data: {
-                labels: tamuPerHari.map(item => item.tanggal),
-                datasets: [{
-                    label: 'Jumlah Tamu',
-                    data: tamuPerHari.map(item => item.jumlah),
-                    backgroundColor: 'rgba(54, 162, 235, 0.8)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1,
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { position: 'top' } },
-                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-            }
-        });
-
-        // Grafik per aktivitas (asli, tidak diubah)
-        new Chart(document.getElementById('tamuPerAktivitasChart'), {
-            type: 'pie',
-            data: {
-                labels: tamuPerAktivitas.map(item => item.aktivitas),
-                datasets: [{
-                    label: 'Jumlah Tamu',
-                    data: tamuPerAktivitas.map(item => item.jumlah),
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.7)',
-                        'rgba(75, 192, 192, 0.7)',
-                        'rgba(255, 206, 86, 0.7)',
-                        'rgba(153, 102, 255, 0.7)',
-                        'rgba(255, 159, 64, 0.7)',
-                    ],
-                    borderColor: 'rgba(255, 255, 255, 0.8)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { position: 'right' } }
-            }
-        });
-    </script>
 
     {{-- Script Sidebar --}}
     <script>
@@ -297,14 +258,13 @@
         });
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Script Chart -->
+    {{-- Script Chart --}}
     <script>
         const tamuPerHari = {!! json_encode($tamuPerHari) !!};
         const tamuPerAktivitas = {!! json_encode($tamuPerAktivitas) !!};
+        const tamuPerMember = {!! json_encode($tamuPerMember) !!};
 
-        // Grafik per hari (dibesarkan)
+        // Grafik per hari
         new Chart(document.getElementById('tamuPerHariChart'), {
             type: 'bar',
             data: {
@@ -350,90 +310,83 @@
             }
         });
 
-        //
-        const tamuPerAktivitas = {!! json_encode($tamuPerAktivitas) !!};
+        // Grafik per nama
+        new Chart(document.getElementById('tamuPerMemberChart'), {
+            type: 'bar',
+            data: {
+                labels: tamuPerMember.map(item => item.nama),
+                datasets: [{
+                    label: 'Jumlah Kunjungan',
+                    data: tamuPerMember.map(item => item.jumlah),
+                    backgroundColor: 'rgba(0, 123, 255, 0.7)',
+                    borderColor: 'rgba(0, 123, 255, 1)',
+                    borderWidth: 1,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
 
-new Chart(document.getElementById('tamuPerAktivitasChart'), {
-    type: 'pie',
-    data: {
-        labels: tamuPerAktivitas.map(item => item.aktivitas),
-        datasets: [{
-            label: 'Jumlah Tamu',
-            data: tamuPerAktivitas.map(item => item.jumlah),
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.7)',
-                'rgba(75, 192, 192, 0.7)',
-                'rgba(255, 206, 86, 0.7)',
-                'rgba(153, 102, 255, 0.7)',
-                'rgba(255, 159, 64, 0.7)',
-            ],
-            borderColor: 'rgba(255, 255, 255, 0.8)',
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { position: 'right' } }
-    }
-});
-
-    </script>
-
-    <!-- Script untuk Export Statistik -->
-    <script>
-        function exportStats() {
-            let data = getDataForExport();
-            let csvContent = "data:text/csv;charset=utf-8," + data;
-            let encodedUri = encodeURI(csvContent);
-            let link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "statistik_tamu.csv");
-            link.click();
-        }
-
+        // Export CSV
         function getDataForExport() {
-            let data = "Nama Aktivitas, Jumlah Tamu\n";
-            
+            let data = "Nama/Tujuan, Jumlah Tamu\n";
+
+            data += "\n-- Statistik Per Aktivitas --\n";
             tamuPerAktivitas.forEach(item => {
                 data += `${item.aktivitas}, ${item.jumlah}\n`;
             });
-            
+
+            data += "\n-- Statistik Per Nama --\n";
+            tamuPerMember.forEach(item => {
+                data += `${item.nama}, ${item.jumlah}\n`;
+            });
+
             return data;
         }
 
-//
+        function exportStats() {
+            let data = getDataForExport();
+            let csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(data);
+            let link = document.createElement("a");
+            link.setAttribute("href", csvContent);
+            link.setAttribute("download", "statistik_tamu.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Export PDF
         function exportToPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    // Menambahkan margin
-    doc.setMargins(10, 10, 10, 10);
-    
-    // Menambahkan judul
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("Statistik Tamu E-Library", 10, 20);
-    
-    // Menangkap gambar dari canvas dan menambahkannya ke PDF
-    const canvas = document.getElementById('tamuPerAktivitasChart');
-    const imgData = canvas.toDataURL('image/png'); // Mengonversi canvas ke gambar PNG
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(16);
+            doc.text("Statistik Tamu E-Library", 10, 20);
 
-    doc.addImage(imgData, 'PNG', 10, 30, 180, 100); // Menambahkan gambar ke PDF
+            // Tambahkan chart aktivitas
+            const aktivitasChart = document.getElementById('tamuPerAktivitasChart');
+            const aktivitasImg = aktivitasChart.toDataURL('image/png');
+            doc.addImage(aktivitasImg, 'PNG', 10, 30, 180, 90);
 
-    // Menambahkan CSV Data
-    const dataCSV = getDataForExport(); // Mendapatkan data CSV
-    doc.setFontSize(12);
-    doc.text("Data CSV Aktivitas Tamu:", 10, 140);
-    doc.text(dataCSV, 10, 150);
+            // Tambahkan chart per nama
+            const memberChart = document.getElementById('tamuPerMemberChart');
+            const memberImg = memberChart.toDataURL('image/png');
+            doc.addImage(memberImg, 'PNG', 10, 125, 180, 90);
 
-    // Menyimpan PDF
-    doc.save('statistik_tamu.pdf');
-}
+            // Tambahkan CSV data
+            const dataCSV = getDataForExport();
+            doc.setFontSize(12);
+            doc.text("Data Statistik:", 10, 225);
+            const splitData = doc.splitTextToSize(dataCSV, 180);
+            doc.text(splitData, 10, 235);
 
-
+            doc.save('statistik_tamu.pdf');
+        }
     </script>
 
-    
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

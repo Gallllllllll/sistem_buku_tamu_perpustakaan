@@ -131,7 +131,13 @@
     <div class="sidebar" id="sidebar">
         <a href="{{ route('tamus.index') }}" class="active">📖 Daftar Tamu</a>
         <a href="{{ route('tamus.statistik') }}">📊 Statistik</a>
-        <a href="{{ url('/logout') }}">🚪 Logout</a>
+        <form action="{{ route('admin.logout') }}" method="POST">
+            @csrf
+            <button type="submit">Logout</button>
+        </form>
+
+
+
     </div>
     
 

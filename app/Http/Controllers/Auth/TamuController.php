@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
 use App\Models\Tamu;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\TamuExport;
@@ -16,6 +17,18 @@ class TamuController extends Controller
     public function index(Request $request)
     {
         $query = Tamu::query();
+
+        $userId = auth()->id();
+
+        $totalTamu = Tamu::where('user_id', $userId)->count();
+
+        $tamuPerNama = Tamu::selectRaw('nama, COUNT(*) as jumlah')
+            ->where('user_id', $userId)
+            ->groupBy('nama')
+            ->orderBy('jumlah', 'desc')
+            ->get();
+        
+            return view('member.dashboard', compact('totalTamu', 'tamuPerNama'));
 
         if ($request->has('search') && !empty($request->search)) {
             $s = $request->search;
@@ -83,9 +96,13 @@ class TamuController extends Controller
             'totalBulanIni',
             'totalHariIni',
             'tamuPerHari',
-            'tamuPerAktivitas'
+            'tamuPerAktivitas',
+            'tamuPerNama',
         ));
     }
+
+    
+
 
     // Export Excel
     public function exportExcel()

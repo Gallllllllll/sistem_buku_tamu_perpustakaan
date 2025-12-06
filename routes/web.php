@@ -1,72 +1,75 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\TamuController;
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Auth\TamuController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\MemberDashboardController;
+use App\Http\Controllers\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\TamuController as AdminTamuController;
 
 
 
-
-// ===== HALAMAN UTAMA & LOGIN =====
-Route::middleware(['web'])->group(function () {
-    // Halaman utama langsung ke form tamu (bukan login)
-    Route::get('/', [TamuController::class, 'create'])->name('home');
-    
-    // Login admin
-    Route::get('/login-admin', [AuthController::class, 'showLogin'])->name('login-admin');
-    Route::post('/login-admin', [AuthController::class, 'login']);
-    Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
-
-});
-
-// ===== HALAMAN ADMIN (setelah login) =====
-Route::middleware(['auth'])->group(function () {
-    Route::get('/tampil', [TamuController::class, 'index'])->name('tamus.index');
-    Route::get('/tamus/export-excel', [TamuController::class, 'exportExcel'])->name('tamus.exportExcel');
-    Route::get('/tamus/export-pdf', [TamuController::class, 'exportPDF'])->name('tamus.exportPDF');
-    Route::get('/tamus/statistik', [TamuController::class, 'statistik'])->name('tamus.statistik');
-    //Route::get('/tamus/export-statistik-pdf', [TamuController::class, 'exportStatistikPdf'])->name('tamus.export-statistik-pdf');
-    //Route::get('/tamus/export-statistik', [App\Http\Controllers\TamuController::class, 'exportStatistik'])->name('tamus.exportStatistik');
-    Route::get('/tamus/export/statistik', [TamuController::class, 'exportStatistik'])->name('tamus.exportStatistik');
-    Route::get('/export-statistik', [TamuController::class, 'exportStatistik'])->name('tamus.exportStatistik');
-
-
-    Route::delete('/tamus/{id}', [TamuController::class, 'destroy'])->name('tamus.destroy');
-});
-
-// ===== HALAMAN FORM TAMU (publik) =====
+// ============================================
+// =========== HALAMAN PUBLIK =================
+// ============================================
+Route::get('/', [TamuController::class, 'create'])->name('home');
 Route::get('/tambah', [TamuController::class, 'create'])->name('tamus.create');
 Route::post('/tamus', [TamuController::class, 'store'])->name('tamus.store');
 
+// ============================================
+// =========== REGISTER MEMBER =================
+// ============================================
+Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
+Route::post('/register', [RegisteredUserController::class, 'store'])->name('register.store');
 
-
-Route::get('/tamus/edit/{id}', [TamuController::class, 'edit'])->name('tamus.edit');
-Route::post('/tamus/update/{id}', [TamuController::class, 'update'])->name('tamus.update');
-
-// Menampilkan halaman login
-Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-Route::post('/login', [AuthenticatedSessionController::class, 'store']);
-
-// Menampilkan halaman registrasi
-
-
-Route::get('/dashboard', function () {return view('dashboard');})->middleware('auth');
-
-
-
-Route::get('/register', [RegisteredUserController::class, 'index'])->name('register');
-Route::post('/register', [RegisteredUserController::class, 'store']); // Menyimpan data dan redirect ke halaman create
-Route::get('/create', [SomeController::class, 'create'])->name('create'); // Ganti dengan controller yang sesuai
-
-
-
-// Route to show login form
+// ============================================
+// =========== LOGIN MEMBER ====================
+// ============================================
 Route::get('/loginuser', [AuthenticatedSessionController::class, 'create'])->name('loginuser');
+Route::post('/loginuser', [AuthenticatedSessionController::class, 'store'])->name('loginuser.store');
 
-// Route to handle login form submission
-Route::post('/loginuser', [AuthenticatedSessionController::class, 'store']);
+// ============================================
+// =========== DASHBOARD & LOGOUT MEMBER =======
+// ============================================
+Route::middleware(['auth'])->group(function () {
+    Route::get('/member/dashboard', [MemberDashboardController::class, 'index'])
+        ->name('member.dashboard');
 
-// Route to logout
-Route::get('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+    Route::post('/member/dashboard/tamu', [MemberDashboardController::class, 'storeTamu'])
+        ->name('member.dashboard.tamu');
+
+    // Logout member
+    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+});
+
+// ============================================
+// =========== LOGIN & DASHBOARD ADMIN =========
+// ============================================
+Route::prefix('admin')->group(function () {
+
+
+    // Login admin
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login.admin');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.admin.process');
+
+    // Logout admin
+    Route::post('/logout', [AuthController::class, 'logout'])->name('admin.logout');
+
+
+    // Middleware admin
+    // Route ADMIN
+    Route::middleware(['auth:admin'])->group(function () {
+        Route::get('/tampil', [AdminTamuController::class, 'index'])->name('tamus.index');
+        Route::get('/tamus/export-excel', [AdminTamuController::class, 'exportExcel'])->name('tamus.exportExcel');
+        Route::get('/tamus/export-pdf', [AdminTamuController::class, 'exportPDF'])->name('tamus.exportPDF');
+        Route::get('/tamus/statistik', [AdminTamuController::class, 'statistik'])->name('tamus.statistik');
+        Route::get('/tamus/export/statistik', [AdminTamuController::class, 'exportStatistik'])->name('tamus.exportStatistik');
+        Route::delete('/tamus/{id}', [AdminTamuController::class, 'destroy'])->name('tamus.destroy');
+        Route::get('/tamus/edit/{id}', [AdminTamuController::class, 'edit'])->name('tamus.edit');
+        Route::post('/tamus/update/{id}', [AdminTamuController::class, 'update'])->name('tamus.update');
+    });
+
+});

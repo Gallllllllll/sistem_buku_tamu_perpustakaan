@@ -83,20 +83,21 @@
     <!-- 🔐 Tombol Login di pojok kiri atas -->
     <div class="top-right d-flex gap-2 p-2">
         @guest
-            <a href="{{ route('login-admin') }}" class="btn btn-outline-light btn-sm">
+            <a href="{{ route('login.admin') }}" class="btn btn-outline-light btn-sm">
                 🔐 Login Administrator
             </a>
             <!-- Tombol untuk registrasi dan login -->
             <a href="{{ route('register') }}" class="btn btn-primary">Daftar Akun</a>
-            <a href="{{ route('login') }}" class="btn btn-secondary">Login</a>
+            <a href="{{ route('loginuser') }}" class="btn btn-secondary">Login</a>
 
         @else
             <a href="{{ route('tamus.index') }}" class="btn btn-success btn-sm">
                 📋 Dashboard Admin
             </a>
-            <a href="{{ route('logout') }}" class="btn btn-danger btn-sm">
-                🚪 Logout
-            </a>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-link text-white p-0" style="text-decoration:none;">🚪 Logout</button>
+            </form>
         @endguest
     </div>
 

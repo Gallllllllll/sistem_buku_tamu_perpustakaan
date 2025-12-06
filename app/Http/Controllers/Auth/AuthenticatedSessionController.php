@@ -8,41 +8,27 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthenticatedSessionController extends Controller
 {
-    // Menampilkan form login
-    public function create()
-    {
-        return view('tamus.loginuser');
+    public function create() {
+        return view('auth.loginuser');
     }
 
-    // Menyimpan session setelah login
-    public function store(Request $request)
-    {
-        // Validasi login
-        $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+    public function store(Request $request) {
+        $credentials = $request->only('email', 'password');
 
-        // Autentikasi pengguna
-        if (Auth::attempt($request->only('email', 'password'))) {
-            // Redirect ke halaman create setelah berhasil login
-            return redirect()->route('tamus.create');
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+            return redirect()->route('member.dashboard');
         }
 
-        // Jika login gagal, kembali ke form login dengan pesan error
         return back()->withErrors([
-            'email' => 'The provided credentials are incorrect.',
+            'email' => 'Email atau password salah',
         ]);
     }
 
-    // Logout pengguna
-    public function destroy(Request $request)
-    {
+    public function destroy(Request $request) {
         Auth::logout();
-        request()->session()->invalidate();
-        request()->session()->regenerateToken();
-
-        // Redirect ke halaman login setelah logout
-        return redirect('/');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('home');
     }
 }

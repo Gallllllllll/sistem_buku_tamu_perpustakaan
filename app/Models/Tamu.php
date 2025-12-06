@@ -9,10 +9,16 @@ class Tamu extends Model
 {
     use HasFactory;
 
+    // Tambahkan field yang boleh di-mass assign
     protected $fillable = [
         'nama',
         'instansi',
         'tujuan',
         'waktu_kedatangan',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
