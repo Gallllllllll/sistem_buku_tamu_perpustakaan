@@ -162,33 +162,30 @@ class TamuController extends Controller
     // DAILY STATS (30 hari terakhir untuk grafik)
     // ========================================
     public function dailyStats()
-    {
-        $start = Carbon::now()->subDays(29)->startOfDay();
-        $end = Carbon::now()->endOfDay();
+{
+    $start = Carbon::now()->subDays(29)->startOfDay();
+    $end = Carbon::now()->endOfDay();
 
-        // Ambil data tamu sesuai tanggal
-        $rawData = Tamu::selectRaw('DATE(waktu_kedatangan) AS tanggal, COUNT(*) AS count')
-            ->whereBetween('waktu_kedatangan', [$start, $end])
-            ->groupBy('tanggal')
-            ->orderBy('tanggal', 'ASC')
-            ->get()
-            ->keyBy('tanggal');
+    // data real dari DB
+    $rawData = Tamu::selectRaw('DATE(waktu_kedatangan) AS tanggal, COUNT(*) AS count')
+        ->whereBetween('waktu_kedatangan', [$start, $end])
+        ->groupBy('tanggal')
+        ->orderBy('tanggal', 'ASC')
+        ->get()
+        ->keyBy('tanggal');
 
-        // Generate 30 hari lengkap (meskipun 0)
-        $daily_stats = collect();
+    // generate lengkap 30 hari
+    $daily_stats = collect();
 
-        for ($date = $start->copy(); $date <= $end; $date->addDay()) {
-            $formatted = $date->format('Y-m-d');
+    for ($date = $start->copy(); $date <= $end; $date->addDay()) {
+        $formatted = $date->format('Y-m-d');
 
-            $daily_stats->push([
-                'tanggal' => $formatted,
-                'count' => $rawData[$formatted]->count ?? 0,
-            ]);
-        }
-
-        return $daily_stats;
+        $daily_stats->push([
+            'tanggal' => $formatted,
+            'count'   => isset($rawData[$formatted]) ? (int)$rawData[$formatted]->count : 0
+        ]);
     }
 
-    
+    return $daily_stats;
 }
-
+}

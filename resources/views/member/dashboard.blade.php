@@ -1,63 +1,236 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Member - Buku Tamu Digital</title>
 
-@section('content')
-<div class="container py-5">
-    <div class="welcome-text text-center mb-4">
-        <h2>📚 Selamat Datang, {{ auth()->user()->name }}</h2>
-        <p>Total kunjungan/tamu yang sudah tercatat: <strong>{{ $totalTamu }}</strong></p>
-    </div>
+    <!-- Font Tema -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
 
-    @if(session('success'))
-        <div class="alert alert-success">
-            🎉 {{ session('success') }}
-        </div>
-    @endif
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header text-white bg-primary text-center">
-                    <h4>➕ Tambah Tamu Baru</h4>
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('member.dashboard.tamu') }}" method="POST">
-                        @csrf
-                        <div class="mb-3">
-                            <label for="nama" class="form-label">Nama</label>
-                            <input type="text" name="nama" id="nama" class="form-control" placeholder="Masukkan nama lengkap" required>
-                        </div>
+        body {
+            font-family: 'Instrument Sans', ui-sans-serif, system-ui;
+            background: #f5f5f5;
+            min-height: 100vh;
+            color: #1b1b18;
+        }
 
-                        <div class="mb-3">
-                            <label for="instansi" class="form-label">Instansi</label>
-                            <input type="text" name="instansi" id="instansi" class="form-control" placeholder="Masukkan asal instansi" required>
-                        </div>
+        /* NAV */
+        .navbar-top {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 30px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
 
-                        <div class="mb-3">
-                            <label for="tujuan" class="form-label">Tujuan Kunjungan</label>
-                            <select name="tujuan" id="tujuan" class="form-select" required>
-                                <option value="">-- Pilih Tujuan --</option>
-                                <option value="Membaca">Membaca</option>
-                                <option value="Meminjam Buku">Meminjam Buku</option>
-                                <option value="Mengembalikan Buku">Mengembalikan Buku</option>
-                                <option value="Mencari Referensi">Mencari Referensi</option>
-                                <option value="Diskusi/Belajar Kelompok">Diskusi / Belajar Kelompok</option>
-                                <option value="Menggunakan Fasilitas (Komputer/Internet)">Menggunakan Fasilitas</option>
-                                <option value="Lainnya">Lainnya</option>
-                            </select>
-                        </div>
+        .navbar-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
 
-                        <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-primary">💾 Simpan Tamu</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+        .navbar-actions {
+            display: flex;
+            gap: 12px;
+        }
 
-            <form method="POST" action="{{ route('logout') }}" class="mt-3 text-end">
+        .btn-nav {
+            padding: 8px 15px;
+            border-radius: 6px;
+            border: 2px solid white;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.25s ease;
+        }
+
+        .btn-nav:hover { background: white; color: #667eea; }
+
+        /* CONTENT */
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .welcome {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .welcome h2 {
+            font-weight: 700;
+            font-size: 22px;
+            color: #667eea;
+            margin-bottom: 6px;
+        }
+
+        .welcome p {
+            font-size: 14px;
+            color: #706f6c;
+        }
+
+        /* CARD */
+        .form-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            border-top: 4px solid #667eea;
+        }
+
+        .form-card h3 {
+            text-align: center;
+            font-size: 16px;
+            color: #667eea;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #d4d4d2;
+            font-size: 14px;
+            color: #333;
+            background: #fafafa;
+            transition: border 0.2s ease;
+            font-family: inherit;
+        }
+
+        .form-input:focus, .form-select:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .btn-submit {
+            width: 100%;
+            margin-top: 16px;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-submit:hover { opacity: 0.85; }
+
+        /* Alerts */
+        .alert {
+            margin-bottom: 18px;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            animation: fade .3s ease;
+        }
+
+        .alert-success {
+            background: #e8f7ee;
+            border-left: 4px solid #3bb273;
+            color: #256f4d;
+        }
+
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(-3px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAV -->
+    <div class="navbar-top">
+        <div class="navbar-title">Buku Tamu Digital</div>
+
+        <div class="navbar-actions">
+
+            <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="btn btn-danger">🚪 Logout</button>
+                <button class="btn-nav" type="submit">Logout</button>
             </form>
         </div>
     </div>
-</div>
-@endsection
+
+
+    <!-- CONTENT -->
+    <div class="container">
+
+        <!-- Welcome -->
+        <div class="welcome">
+            <h2>Selamat Datang, {{ auth()->user()->name }}</h2>
+            <p>Total kunjungan tercatat: <strong>{{ $totalTamu }}</strong></p>
+        </div>
+
+        <!-- Form -->
+        <div class="form-card">
+            <h3>Tambah Tamu Baru</h3>
+
+            @if(session('success'))
+                <div class="alert alert-success">
+                    Data berhasil disimpan!
+                </div>
+            @endif
+
+            <form action="{{ route('member.dashboard.tamu') }}" method="POST">
+                @csrf
+
+                <label class="form-label">Nama</label>
+                <input type="text" name="nama" class="form-input"
+                       value="{{ auth()->user()->name }}" readonly>
+
+                <label class="form-label" style="margin-top: 12px;">Instansi</label>
+                <input type="text" name="instansi" class="form-input"
+                       placeholder="Masukkan instansi" required>
+
+                <label class="form-label" style="margin-top: 12px;">Tujuan Kunjungan</label>
+                <select name="tujuan" class="form-select" required>
+                    <option value="">-- Pilih Tujuan --</option>
+                    <option value="Membaca">Membaca</option>
+                    <option value="Meminjam Buku">Meminjam Buku</option>
+                    <option value="Mengembalikan Buku">Mengembalikan Buku</option>
+                    <option value="Mencari Referensi">Mencari Referensi</option>
+                    <option value="Diskusi/Belajar Kelompok">Diskusi / Belajar Kelompok</option>
+                    <option value="Menggunakan Fasilitas">Menggunakan Fasilitas</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
+
+                <button class="btn-submit" type="submit">Simpan Data Tamu</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        setTimeout(() => {
+            const alert = document.querySelector('.alert');
+            if(alert){
+                alert.style.transition = "all .5s ease";
+                alert.style.opacity = "0";
+                alert.style.transform = "translateY(-10px)";
+                setTimeout(() => alert.remove(), 500);
+            }
+        }, 3000);
+    </script>
+
+</body>
+</html>

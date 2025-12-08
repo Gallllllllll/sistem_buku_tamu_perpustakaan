@@ -38,7 +38,7 @@ class MemberDashboardController extends Controller
         // Statistik per aktivitas/tujuan
         $tamuPerAktivitas = Tamu::selectRaw('tujuan as aktivitas, COUNT(*) as jumlah')
             ->where('user_id', $userId)
-            ->groupBy('aktivitas')
+            ->groupBy('tujuan')
             ->orderBy('jumlah', 'desc')
             ->get();
 
