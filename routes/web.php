@@ -62,11 +62,16 @@ Route::prefix('admin')->group(function () {
     // Middleware admin
     // Route ADMIN
     Route::middleware(['auth:admin'])->group(function () {
+        // Dashboard admin
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+
         Route::get('/tampil', [AdminTamuController::class, 'index'])->name('tamus.index');
         Route::get('/tamus/export-excel', [AdminTamuController::class, 'exportExcel'])->name('tamus.exportExcel');
         Route::get('/tamus/export-pdf', [AdminTamuController::class, 'exportPDF'])->name('tamus.exportPDF');
         Route::get('/tamus/statistik', [AdminTamuController::class, 'statistik'])->name('tamus.statistik');
         Route::get('/tamus/export/statistik', [AdminTamuController::class, 'exportStatistik'])->name('tamus.exportStatistik');
+        // Named route for PDF export used by views
+        Route::get('/tamus/export/statistik/pdf', [AdminTamuController::class, 'exportStatistik'])->name('admin.export-statistik-pdf');
         Route::delete('/tamus/{id}', [AdminTamuController::class, 'destroy'])->name('tamus.destroy');
         Route::get('/tamus/edit/{id}', [AdminTamuController::class, 'edit'])->name('tamus.edit');
         Route::post('/tamus/update/{id}', [AdminTamuController::class, 'update'])->name('tamus.update');

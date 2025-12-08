@@ -113,6 +113,39 @@
                 margin-left: 0;
             }
         }
+
+        /* Additional tidy admin styles (navbar, actions, cards, search, table) */
+        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 18px 24px; display:flex; justify-content:space-between; align-items:center; border-radius:8px; }
+        .navbar h1 { margin:0; font-size:18px; font-weight:600; }
+        .navbar-actions { display:flex; gap:12px; align-items:center; }
+        .btn-action { padding:8px 14px; border-radius:8px; border:2px solid white; background:transparent; color:white; text-decoration:none; font-weight:600; }
+        .btn-action:hover { background:white; color:#667eea; }
+
+        .container { max-width:1200px; margin:0 auto; padding:20px; }
+        .stats { display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:18px; margin-bottom:20px; }
+        .stat-card { background:white; padding:18px; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.06); text-align:center; }
+        .stat-card h3 { margin:0; font-size:13px; color:#6b6b6b; }
+        .stat-card .number { font-size:26px; font-weight:700; color: #333; }
+
+        .search-section { background:white; border-radius:10px; padding:16px; box-shadow:0 6px 18px rgba(0,0,0,0.04); margin-bottom:18px; }
+        .search-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
+        .search-group label { display:block; font-weight:600; margin-bottom:6px; font-size:13px; }
+        .search-group input, .search-group select { width:100%; padding:8px 10px; border:1px solid #e6e6e6; border-radius:6px; }
+        .search-actions { margin-top:12px; display:flex; gap:8px; }
+        .btn-search { padding:8px 16px; border-radius:8px; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; border:none; font-weight:700; }
+        .btn-reset { padding:8px 16px; border-radius:8px; background:#fff; border:1px solid #667eea; color:#667eea; font-weight:700; }
+
+        .table-section { background:white; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.04); overflow:hidden; }
+        .table-header { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:14px 18px; }
+        table { width:100%; border-collapse:collapse; }
+        th { text-align:left; padding:12px; background:#fafafa; border-bottom:1px solid #eee; }
+        td { padding:12px; border-bottom:1px solid #f1f1f1; }
+        .badge { display:inline-block; padding:6px 10px; border-radius:20px; font-size:12px; }
+
+        @media (max-width:768px) {
+            .navbar { flex-direction:column; gap:10px; align-items:flex-start; }
+            .search-grid { grid-template-columns:1fr; }
+        }
     </style>
 </head>
 <body>
@@ -145,98 +178,143 @@
     <div class="main-content" id="main">
         {{-- Tombol aksi --}}
         <div class="mb-3 d-flex flex-wrap gap-2">
-            <a href="{{ route('tamus.create') }}" class="btn btn-primary">➕ Tambah Tamu Baru</a>
-            <a href="{{ route('tamus.exportExcel') }}" class="btn btn-success">⬇️ Export Excel</a>
-            <a href="{{ route('tamus.exportPDF') }}" class="btn btn-danger">⬇️ Export PDF</a>
-        </div>
-
-        {{-- Form pencarian --}}
-        <form method="GET" action="{{ route('tamus.index') }}" class="mb-4">
-            <div class="input-group">
-                <input type="text" name="search" class="form-control"
-                       placeholder="Cari nama / instansi / tanggal"
-                       value="{{ request('search') }}">
-                <button class="btn btn-outline-secondary" type="submit">Cari</button>
+            <div class="navbar">
+                <h1>📊 Admin Dashboard - Buku Tamu Digital</h1>
+                <div class="navbar-actions">
+                    <a href="{{ route('tamus.exportPDF', request()->query()) }}" class="btn-action" target="_blank">
+                        📄 Export PDF
+                    </a>
+                    <a href="{{ route('tamus.exportExcel', request()->query()) }}" class="btn-action" target="_blank">
+                        📊 Export Excel
+                    </a>
+                    <a href="{{ route('tamus.statistik') }}" class="btn-action">
+                        📈 Statistik
+                    </a>
+                    <form method="POST" action="{{ route('admin.logout') }}" style="display: inline;">
+                        @csrf
+                        <button type="submit" class="btn-action" onclick="return confirm('Yakin ingin logout?')">
+                            🚪 Logout
+                        </button>
+                    </form>
+                </div>
             </div>
-        </form>
 
-        {{-- Pesan sukses --}}
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
+            <div class="container">
+                <div class="stats">
+                    <div class="stat-card">
+                        <h3>Total Tamu</h3>
+                        <div class="number">{{ $total_tamu }}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Tamu Hari Ini</h3>
+                        <div class="number">{{ $tamu_hari_ini }}</div>
+                    </div>
+                </div>
 
-        {{-- Tabel tamu --}}
-        <div class="card shadow-sm">
-            <div class="card-body p-0">
-                <table class="table table-striped">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>No</th>
-                            <th>Nama</th>
-                            <th>Instansi</th>
-                            <th>Tujuan</th>
-                            <th>Tanggal</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($tamus as $index => $tamu)
-                        <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td>{{ $tamu->nama }}</td>
-                            <td>{{ $tamu->instansi }}</td>
-                            <td>{{ $tamu->tujuan }}</td>
-                            <td>{{ $tamu->created_at->format('d M Y H:i') }}</td>
+                <div class="search-section">
+                    <h3>🔍 Pencarian & Filter</h3>
+                    <form method="GET" action="{{ route('admin.dashboard') }}" class="search-form">
+                        <div class="search-grid">
+                            <div class="search-group">
+                                <label>Nama / Instansi</label>
+                                <input 
+                                    type="text" 
+                                    name="search" 
+                                    value="{{ request('search') }}" 
+                                    placeholder="Cari nama atau instansi..."
+                                >
+                            </div>
 
-                            
-                            <td>
-                               
-                                <a href="{{ route('tamus.edit', $tamu->id) }}" class="btn btn-warning btn-sm">Update</a>
+                            <div class="search-group">
+                                <label>Tujuan Kunjungan</label>
+                                <select name="tujuan">
+                                    <option value="">-- Semua Tujuan --</option>
+                                    @foreach ($tujuan_list as $tujuan)
+                                        <option value="{{ $tujuan }}" {{ request('tujuan') === $tujuan ? 'selected' : '' }}>
+                                            {{ $tujuan }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
 
-                                <form action="{{ route('tamus.destroy', $tamu->id) }}" method="POST" style="display:inline;"
-                                    onsubmit="return confirm('Apakah kamu yakin ingin menghapus data ini?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
-                                </form>
+                            <div class="search-group">
+                                <label>Dari Tanggal</label>
+                                <input 
+                                    type="date" 
+                                    name="tanggal_dari" 
+                                    value="{{ request('tanggal_dari') }}"
+                                >
+                            </div>
 
-                            </td>
+                            <div class="search-group">
+                                <label>Sampai Tanggal</label>
+                                <input 
+                                    type="date" 
+                                    name="tanggal_sampai" 
+                                    value="{{ request('tanggal_sampai') }}"
+                                >
+                            </div>
+                        </div>
 
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        <div class="search-actions">
+                            <button type="submit" class="btn-search">🔍 Cari</button>
+                            <a href="{{ route('admin.dashboard') }}" class="btn-reset">↻ Reset</a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="table-section">
+                    <div class="table-header">
+                        <h2>📋 Daftar Tamu Pengunjung</h2>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Nama</th>
+                                <th>Asal Instansi</th>
+                                <th>Tujuan Kunjungan</th>
+                                <th>Waktu Kedatangan</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($tamus as $index => $tamu)
+                                <tr>
+                                    <td>{{ ($tamus->currentPage() - 1) * $tamus->perPage() + $index + 1 }}</td>
+                                    <td>{{ $tamu->nama }}</td>
+                                    <td>{{ $tamu->instansi }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ strtolower(str_replace(' ', '-', $tamu->tujuan)) }}">
+                                            {{ $tamu->tujuan }}
+                                        </span>
+                                    </td>
+                                    <td>{{ \Carbon\Carbon::parse($tamu->waktu_kedatangan)->format('d/m/Y H:i') }}</td>
+                                    <td>
+                                        <a href="{{ route('tamus.edit', $tamu->id) }}" class="btn-action" title="Edit {{ $tamu->nama }}">✏️ Edit</a>
+                                        <form method="POST" action="{{ route('tamus.destroy', $tamu->id) }}" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus data tamu ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-action" style="border-color:#dc2626; background:#fff; color:#dc2626;">🗑️ Hapus</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 30px;">
+                                        Belum ada data tamu
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+
+                    @if ($tamus->hasPages())
+                        <div class="pagination">
+                            {{ $tamus->links('pagination::simple-bootstrap-4') }}
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
-    </div>
-
-    <script>
-        const toggleBtn = document.getElementById('toggleBtn');
-        const sidebar = document.getElementById('sidebar');
-        const main = document.getElementById('main');
-        const overlay = document.getElementById('overlay');
-
-        toggleBtn.addEventListener('click', () => {
-            if (window.innerWidth > 992) {
-                // Desktop mode
-                sidebar.classList.toggle('hidden');
-                main.classList.toggle('full');
-            } else {
-                // Mobile mode
-                
-                sidebar.classList.toggle('show');
-                overlay.classList.toggle('show');
-            }
-        });
-
-        overlay.addEventListener('click', () => {
-            sidebar.classList.remove('show');
-            overlay.classList.remove('show');
-        });
-
-        // Tidak auto buka/tutup saat resize
-    </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
