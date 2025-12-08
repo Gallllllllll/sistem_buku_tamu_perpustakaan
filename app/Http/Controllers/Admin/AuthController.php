@@ -15,7 +15,7 @@ class AuthController extends Controller
      */
     public function showLogin()
     {
-        return view('tamus.login'); // pastikan view ada di resources/views/admin/login.blade.php
+        return view('tamus.login');
     }
 
     /**
@@ -28,17 +28,24 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
+        // Ambil admin berdasarkan username
         $admin = Admin::where('username', $request->username)->first();
 
-        if ($admin && Hash::check($request->password, $admin->password)) {
-            // Login menggunakan guard admin
-            Auth::guard('admin')->login($admin);
-            $request->session()->regenerate();
-
-            return redirect()->route('tamus.index');
+        // Username tidak ditemukan
+        if (!$admin) {
+            return back()->with('error', 'Akun tidak ditemukan.')->withInput();
         }
 
-        return back()->withErrors(['login' => 'Username atau password salah'])->withInput();
+        // Password salah
+        if (!Hash::check($request->password, $admin->password)) {
+            return back()->with('error', 'Password salah.')->withInput();
+        }
+
+        // Login guard admin
+        Auth::guard('admin')->login($admin);
+        $request->session()->regenerate();
+
+        return redirect()->route('tamus.index');
     }
 
     /**
@@ -51,7 +58,6 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // Redirect ke login admin
         return redirect('/');
     }
 }

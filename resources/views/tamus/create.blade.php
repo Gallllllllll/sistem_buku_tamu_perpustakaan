@@ -187,25 +187,41 @@
         <div class="navbar-title">Buku Tamu Digital</div>
 
         <div class="navbar-actions">
+
+        {{-- Jika login sebagai ADMIN --}}
+        @auth('admin')
+            <a href="{{ route('tamus.index') }}" class="btn-nav">Dashboard</a>
+
+            <form method="POST" action="{{ route('admin.logout') }}">
+                @csrf
+                <button class="btn-nav" type="submit">Logout</button>
+            </form>
+
+        {{-- Jika BUKAN admin (tamu/pengguna biasa) --}}
+        @else
             @guest
-                <a href="{{ route('login.admin') }}" class="btn-nav">Login Admin</a>
+                <a href="{{ route('login.admin') }}" class="btn-nav">Login Administrator</a>
                 <a href="{{ route('register') }}" class="btn-nav">Daftar</a>
                 <a href="{{ route('loginuser') }}" class="btn-nav">Login</a>
             @else
                 <a href="{{ route('tamus.index') }}" class="btn-nav">Dashboard</a>
+
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button class="btn-nav" type="submit">Logout</button>
                 </form>
             @endguest
-        </div>
+        @endauth
+
+    </div>
+
     </div>
 
     <!-- =============== CONTENT =============== -->
     <div class="container">
 
         <div class="welcome">
-            <h2>Selamat Datang di E-Library</h2>
+            <h2>Selamat Datang di Librain</h2>
             <p>Silakan isi data kunjunganmu pada formulir berikut.</p>
         </div>
 
@@ -245,7 +261,7 @@
                     <option value="Mengembalikan Buku">Mengembalikan Buku</option>
                     <option value="Mencari Referensi">Mencari Referensi</option>
                     <option value="Diskusi/Belajar Kelompok">Diskusi / Belajar Kelompok</option>
-                    <option value="Menggunakan Fasilitas (Komputer/Internet)">Menggunakan Fasilitas</option>
+                    <option value="Menggunakan Fasilitas (Komputer/Internet)">Menggunakan Fasilitas (Komputer/Internet)</option>
                     <option value="Lainnya">Lainnya</option>
                 </select>
 
@@ -253,6 +269,17 @@
             </form>
         </div>
     </div>
+<script>
+    setTimeout(() => {
+    const alert = document.querySelector('.alert');
+    if(alert){
+        alert.style.transition = "all .5s ease";
+        alert.style.opacity = "0";
+        alert.style.transform = "translateY(-10px)";
+        setTimeout(() => alert.remove(), 500);
+    }
+}, 3000);
 
+</script>
 </body>
 </html>

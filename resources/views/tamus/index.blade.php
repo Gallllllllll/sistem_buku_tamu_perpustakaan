@@ -119,20 +119,35 @@
         .navbar h1 { margin: 0; font-size: 18px; font-weight: 600; }
 
         .navbar-actions { display:flex; gap:12px; align-items:center; }
-
         .btn-action {
             padding: 8px 14px;
             border-radius: 8px;
-            border: 2px solid #667eea;
+            border: 2px solid white;
             background: transparent;
-            color: black;
-            text-decoration: none;
-            font-weight: 600;
+            color: white;
+            cursor: pointer;
             font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.25s ease;
         }
         .btn-action:hover {
             background: white;
             color: #667eea;
+        }
+        .btn-action2 {
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 2px solid #667eea;
+            background: transparent;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .btn-action2:hover {
+            background: white;
+            color: black;
         }
 
         .container { max-width:1200px; margin:0 auto; padding:20px; }
@@ -190,15 +205,19 @@
             color: white;
             border: none;
             font-weight: 700;
+            margin-top: 0px;
         }
 
         .btn-reset {
-            padding: 8px 16px;
+            padding: 10px 16px;
             border-radius: 8px;
             background: #fff;
             border: 1px solid #667eea;
             color: #667eea;
             font-weight: 700;
+            text-decoration: none;
+            margin-top: 0px;
+            margin-left: 5px;
         }
 
         .table-section {
@@ -244,7 +263,7 @@
         color: transparent;
         font-weight: 700;
     ">
-        E-Library
+        Librain
     </h4>
 
     <h4 class="flex-grow-1 fw-bold text-center">Dashboard Admin</h4>
@@ -266,13 +285,9 @@
 
     <div class="navbar mb-3">
         <div class="navbar-actions">
+            <a href="{{ route('tamus.create') }}" class="btn-action" style="background:white; color:#667eea;">+ Tambah Tamu</a>
             <a href="{{ route('tamus.exportPDF', request()->query()) }}" class="btn-action" target="_blank">Export PDF</a>
             <a href="{{ route('tamus.exportExcel', request()->query()) }}" class="btn-action" target="_blank">Export Excel</a>
-
-            <form method="POST" action="{{ route('admin.logout') }}" style="display:inline;">
-                @csrf
-                <button type="submit" class="btn-action" onclick="return confirm('Yakin ingin logout?')">Logout</button>
-            </form>
         </div>
     </div>
 
@@ -365,12 +380,12 @@
 
                         <td class="text-center" style="white-space: nowrap;">
                             
-                            <a href="{{ route('tamus.edit', $tamu->id) }}" class="btn-action" style="padding:6px 10px;">Edit</a>
+                            <a href="{{ route('tamus.edit', $tamu->id) }}" class="btn-action2">Edit</a>
 
                             <form action="{{ route('tamus.destroy', $tamu->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus data tamu ini?');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn-action" style="padding:6px 10px; border-color:#dc2626; color:#dc2626;">Hapus</button>
+                                <button type="submit" class="btn-action" style="border-color:#dc2626; color:#dc2626;">Hapus</button>
                             </form>
                         </td>
                     </tr>
