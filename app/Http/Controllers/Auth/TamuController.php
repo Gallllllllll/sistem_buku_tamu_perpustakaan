@@ -7,61 +7,66 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\TamuExport;
-use PDF;
 use Barryvdh\DomPDF\Facade\Pdf as DomPdf;
 use Carbon\Carbon;
 
 class TamuController extends Controller
 {
-    // Menampilkan daftar tamu + pencarian
+    // ========================================
+    // 1. DAFTAR TAMU + PENCARIAN + SORTING
+    // ========================================
     public function index(Request $request)
     {
         $query = Tamu::query();
 
-        $userId = auth()->id();
+        // === FILTER ===
+        if ($request->filled('search')) {
+            $search = $request->search;
 
-        $totalTamu = Tamu::where('user_id', $userId)->count();
-
-        $tamuPerNama = Tamu::selectRaw('nama, COUNT(*) as jumlah')
-            ->where('user_id', $userId)
-            ->groupBy('nama')
-            ->orderBy('jumlah', 'desc')
-            ->get();
-        
-            return view('member.dashboard', compact('totalTamu', 'tamuPerNama'));
-
-        if ($request->has('search') && !empty($request->search)) {
-            $s = $request->search;
-            $query->where('nama', 'like', "%$s%")
-                  ->orWhere('instansi', 'like', "%$s%")
-                  ->orWhereDate('waktu_kedatangan', $s);
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'like', "%$search%")
+                  ->orWhere('instansi', 'like', "%$search%");
+            });
         }
 
-        $tamus = $query->orderBy('waktu_kedatangan', 'desc')->get();
+        // === URUTKAN ===
+        $tamus = $query->orderBy('waktu_kedatangan', 'DESC')->paginate(10);
+
         return view('tamus.index', compact('tamus'));
     }
 
-    // Form tambah tamu
+    // ========================================
+    // 2. FORM TAMBAH TAMU
+    // ========================================
     public function create()
     {
         return view('tamus.create');
     }
 
-    // Simpan tamu baru
+    // ========================================
+    // 3. SIMPAN TAMU BARU (FIX TIMESTAMP)
+    // ========================================
     public function store(Request $request)
     {
         $request->validate([
             'nama' => 'required|string',
             'instansi' => 'required|string',
             'tujuan' => 'required|string',
-            'waktu_kedatangan' => 'nullable|date',
         ]);
 
-        Tamu::create($request->except('_token'));
+        Tamu::create([
+            'nama' => $request->nama,
+            'instansi' => $request->instansi,
+            'tujuan' => $request->tujuan,
+            'waktu_kedatangan' => now(),   // FIX: realtime
+        ]);
+
         return back()->with('success', 'Tamu baru sudah masuk!');
     }
 
-    // Hapus data tamu
+    // ========================================
+    // 4. HAPUS TAMU
+    // ========================================
     public function destroy($id)
     {
         $tamu = Tamu::findOrFail($id);
@@ -70,12 +75,16 @@ class TamuController extends Controller
         return redirect()->route('tamus.index')->with('success', 'Data tamu berhasil dihapus!');
     }
 
-    // Statistik jumlah tamu per hari dan per aktivitas
+    // ========================================
+    // 5. STATISTIK
+    // ========================================
     public function statistik()
     {
         $totalTamu = Tamu::count();
         $totalBulanIni = Tamu::whereMonth('waktu_kedatangan', now()->month)->count();
-        $totalHariIni = Tamu::whereDate('waktu_kedatangan', now()->toDateString())->count();
+        $totalHariIni = Tamu::whereDate('waktu_kedatangan', today())->count();
+        $daily_stats = $this->dailyStats();
+
 
         $tamuPerHari = Tamu::selectRaw('DATE(waktu_kedatangan) as tanggal, COUNT(*) as jumlah')
             ->groupBy('tanggal')
@@ -91,6 +100,11 @@ class TamuController extends Controller
             ->orderBy('aktivitas')
             ->get();
 
+        $tamuPerNama = Tamu::selectRaw('nama, COUNT(*) as jumlah')
+            ->groupBy('nama')
+            ->orderBy('jumlah', 'desc')
+            ->get();
+
         return view('tamus.statistik', compact(
             'totalTamu',
             'totalBulanIni',
@@ -98,42 +112,31 @@ class TamuController extends Controller
             'tamuPerHari',
             'tamuPerAktivitas',
             'tamuPerNama',
+            'daily_stats'
         ));
     }
 
-    
-
-
-    // Export Excel
+    // ========================================
+    // 6. EXPORT EXCEL
+    // ========================================
     public function exportExcel()
     {
         return Excel::download(new TamuExport, 'tamu.xlsx');
     }
 
-    // Export PDF
+    // ========================================
+    // 7. EXPORT PDF
+    // ========================================
     public function exportPDF()
     {
-        $tamus = Tamu::all();
-        $pdf = PDF::loadView('tamus.pdf', compact('tamus'));
+        $tamus = Tamu::orderBy('waktu_kedatangan', 'desc')->get();
+        $pdf = DomPdf::loadView('tamus.pdf', compact('tamus'));
         return $pdf->download('tamu.pdf');
     }
 
-    // Export Statistik
-    public function exportStatistik()
-    {
-        $data = \App\Models\Tamu::selectRaw('DATE(waktu_kedatangan) as tanggal, COUNT(*) as jumlah')
-            ->groupBy('tanggal')
-            ->orderBy('tanggal')
-            ->get();
-
-        $terakhir = \App\Models\Tamu::orderBy('waktu_kedatangan', 'desc')->first()->waktu_kedatangan ?? now()->toDateString();
-
-        $pdf = DomPdf::loadView('tamus.pdf_statistik', compact('data', 'terakhir'));
-
-        return $pdf->download('statistik_tamu.pdf');
-    }
-
-    // Edit dan Update untuk tamu
+    // ========================================
+    // 8. EDIT & UPDATE
+    // ========================================
     public function edit($id)
     {
         $tamu = Tamu::findOrFail($id);
@@ -150,12 +153,42 @@ class TamuController extends Controller
             'tujuan' => 'required|string|max:255',
         ]);
 
-        $tamu->update([
-            'nama' => $request->nama,
-            'instansi' => $request->instansi,
-            'tujuan' => $request->tujuan,
-        ]);
+        $tamu->update($request->only(['nama', 'instansi', 'tujuan']));
 
         return redirect()->route('tamus.index')->with('success', 'Data tamu berhasil diperbarui!');
     }
+
+    // ========================================
+    // DAILY STATS (30 hari terakhir untuk grafik)
+    // ========================================
+    public function dailyStats()
+    {
+        $start = Carbon::now()->subDays(29)->startOfDay();
+        $end = Carbon::now()->endOfDay();
+
+        // Ambil data tamu sesuai tanggal
+        $rawData = Tamu::selectRaw('DATE(waktu_kedatangan) AS tanggal, COUNT(*) AS count')
+            ->whereBetween('waktu_kedatangan', [$start, $end])
+            ->groupBy('tanggal')
+            ->orderBy('tanggal', 'ASC')
+            ->get()
+            ->keyBy('tanggal');
+
+        // Generate 30 hari lengkap (meskipun 0)
+        $daily_stats = collect();
+
+        for ($date = $start->copy(); $date <= $end; $date->addDay()) {
+            $formatted = $date->format('Y-m-d');
+
+            $daily_stats->push([
+                'tanggal' => $formatted,
+                'count' => $rawData[$formatted]->count ?? 0,
+            ]);
+        }
+
+        return $daily_stats;
+    }
+
+    
 }
+

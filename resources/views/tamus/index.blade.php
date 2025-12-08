@@ -119,6 +119,7 @@
         .navbar h1 { margin: 0; font-size: 18px; font-weight: 600; }
 
         .navbar-actions { display:flex; gap:12px; align-items:center; }
+        
         .btn-action {
             padding: 8px 14px;
             border-radius: 8px;
