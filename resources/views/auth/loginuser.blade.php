@@ -5,132 +5,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Member</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
         body {
-            background-image: url("{{ asset('images/bg-pattern.png') }}"); 
-            background-size: cover;        
-            background-position: center;   
-            background-repeat: no-repeat;
             height: 100vh;
+            margin: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            background: linear-gradient(135deg, #6a5acd, #7b8dec);
+            font-family: 'Poppins', sans-serif;
         }
-        .login-container {
-            display: flex;
-            width: 900px;
-            height: 550px;
-            background-color: #fbe6d4;
-            border-radius: 10px;
-            box-shadow: 0 6px 25px 8px rgba(0, 0, 0, 0.15);
+
+        .card-login {
+            width: 400px;
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+            animation: fadeIn 0.5s ease;
         }
-        .login-left {
-            background-color: #a20a0a; /* merah tua */
-            border-top-left-radius: 10px;
-            border-bottom-left-radius: 10px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-        }
-        .login-left img {
-            width: 90%;
-            max-width: 300px;
-        }
-        .login-left .logo {
-            width: 100px;
-            margin-bottom: 10px;
-        }
-        .login-right {
-            flex: 1.2;
-            padding: 50px 60px;
-            position: relative;
-        }
+
         h2 {
             text-align: center;
             font-weight: 600;
-            margin-bottom: 40px;
-            margin-top: 20px;
+            font-size: 1.6rem;
+            margin-bottom: 25px;
+            color: #5a4cd6;
         }
+
         .form-control {
-            border-radius: 10px;
-            padding: 10px;
+            border-radius: 12px;
+            padding: 12px;
         }
+
         .btn-login {
-            background-color: #223a59;
+            background: linear-gradient(90deg, #6a5acd, #7a67ea);
             color: white;
-            border-radius: 15px;
-            padding: 10px;
+            border-radius: 12px;
+            padding: 12px;
             width: 100%;
-            margin-top: 15px;
-            font-size: 1.1rem;
+            font-size: 1rem;
+            border: none;
+            margin-top: 10px;
+            transition: 0.2s;
         }
+
         .btn-login:hover {
-            background-color: #a20a0a; /* merah tua */
-            color: white;
+            background: linear-gradient(90deg, #5543d8, #5d4edb);
         }
+
         .btn-back {
             display: block;
-            width: 150px;
-            margin: 40px auto 0;
-            border-radius: 10px;
-            padding: 8px 25px;
-            color: #223a59;
-            border: 1px solid #223a59;
+            text-align: center;
+            margin-top: 18px;
+            color: #6a5acd;
             text-decoration: none;
-            transition: 0.3s;
-        }
-        .btn-back:hover {
-            background-color: #a20a0a;
-            color: white;
-            border-color: #a20a0a;
+            font-size: 0.9rem;
         }
 
-        @media (max-width: 768px) {
-            .login-container {
-                flex-direction: column;
-                width: 95%;
-                height: auto;
-            }
-            .login-left {
-                display: none;
-            }
+        .btn-back:hover {
+            text-decoration: underline;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
+
 <body>
-    <div class="login-container">
-        <div class="login-left">
-            <img src="{{ asset('images/librain-logo.png') }}" class="logo" alt="LIBRAIN Logo">
-            <img src="{{ asset('images/login-illustration.png') }}" alt="Welcome Image">
-        </div>
 
-        <div class="login-right">
-            <h2>Log In Membership</h2>
+    <div class="card-login">
+        <h2>Log In Member</h2>
 
-            @if(session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
-            @endif
+        @if(session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
 
-            <form method="POST" action="{{ route('loginuser') }}">
-                @csrf
-                <div class="mb-3">
-                    <label class="email">Email</label>
-                    <input type="email" name="email" id="email" required autofocus>
-                </div>
-                <div class="mb-3">
-                    <label class="password">Password</label>
-                    <input type="password" name="password" id="password" required>
-                </div>
-                <button type="submit" class="btn btn-login">Login</button>
-            </form>
-            <a href="{{ url()->previous() }}" class="btn-back">⬅️ Kembali</a>
-        </div>
+        <form method="POST" action="{{ route('loginuser') }}">
+            @csrf
+
+            <div class="mb-3">
+                <label>Email</label>
+                <input type="email" name="email" id="email" class="form-control" required autofocus>
+            </div>
+
+            <div class="mb-3">
+                <label>Password</label>
+                <input type="password" name="password" id="password" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn-login">Login</button>
+        </form>
+
+        <a href="{{ url()->previous() }}" class="btn-back">← Kembali</a>
     </div>
+
 </body>
 </html>

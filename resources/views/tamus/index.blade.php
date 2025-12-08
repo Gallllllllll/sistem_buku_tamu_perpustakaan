@@ -123,9 +123,9 @@
         .btn-action {
             padding: 8px 14px;
             border-radius: 8px;
-            border: 2px solid white;
+            border: 2px solid #667eea;
             background: transparent;
-            color: white;
+            color: black;
             text-decoration: none;
             font-weight: 600;
             font-size: 13px;
@@ -348,7 +348,7 @@
                     <th>Asal Instansi</th>
                     <th>Tujuan Kunjungan</th>
                     <th>Waktu Kedatangan</th>
-                    <th>Aksi</th>
+                    <th class="text-center">Aksi</th>
                 </tr>
                 </thead>
 
@@ -363,7 +363,8 @@
 
                         <td>{{ \Carbon\Carbon::parse($tamu->waktu_kedatangan)->format('d/m/Y H:i') }}</td>
 
-                        <td style="white-space: nowrap;">
+                        <td class="text-center" style="white-space: nowrap;">
+                            
                             <a href="{{ route('tamus.edit', $tamu->id) }}" class="btn-action" style="padding:6px 10px;">Edit</a>
 
                             <form action="{{ route('tamus.destroy', $tamu->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus data tamu ini?');">
