@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Statistik - Sistem Buku Tamu</title>
-
+    <link rel="icon" href="{{ asset('images/librain-logo.png') }}" type="image/x-icon">
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     

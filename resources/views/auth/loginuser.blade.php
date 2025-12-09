@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Login Member - Buku Tamu Digital</title>
-
+    <link rel="icon" href="{{ asset('images/librain-logo.png') }}" type="image/x-icon">
     <!-- Font Tema -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Dashboard - Daftar Tamu</title>
-
+    <link rel="icon" href="{{ asset('images/librain-logo.png') }}" type="image/x-icon">
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -274,7 +274,7 @@
 <!-- Sidebar -->
 <div class="sidebar" id="sidebar">
     <a href="{{ route('tamus.index') }}" class="active">Daftar Tamu</a>
-    <a href="{{ route('tamus.statistik') }}">Statistik</a>
+    <a href="{{ route('tamus.statistik') }}"> Statistik</a>
 
     <form action="{{ route('admin.logout') }}" method="POST" class="mt-3 px-3">
         @csrf
